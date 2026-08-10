@@ -6,3 +6,4 @@ export * from "./expired-time";
 export * from "./cookie";
 export * from "./axios";
 export * from "./timeout";
+export * from "./uri-backend";

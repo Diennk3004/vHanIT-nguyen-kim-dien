@@ -4,8 +4,9 @@ import { ServeStaticModule } from "@nestjs/serve-static";
 import { join } from "path";
 import { AuthModule } from "./auth/auth.module";
 import { UserModule } from "./users/users.module";
-import { ProductModule } from './product/product.module';
-import { MediaFileModule } from './media-file/media-file.module';
+import { ProductModule } from "./product/product.module";
+import { MediaFileModule } from "./media-file/media-file.module";
+import { OrdersModule } from "./orders/orders.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -17,7 +18,8 @@ import { MediaFileModule } from './media-file/media-file.module';
     AuthModule,
     UserModule,
     ProductModule,
-    MediaFileModule
+    MediaFileModule,
+    OrdersModule
   ]
 })
 export class AppModule {}

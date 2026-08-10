@@ -7,7 +7,7 @@ import { genralSans, jostGoogle, kontrap, beVietnamPro } from "@/utils";
 import clsx from "clsx";
 import { Footer } from "@/components";
 import type { Metadata } from "next";
-import React from "react";
+import React, { FunctionComponent, PropsWithChildren } from "react";
 import { config } from "@fortawesome/fontawesome-svg-core";
 import "@fortawesome/fontawesome-svg-core/styles.css";
 config.autoAddCss = false;
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 type Props = {
   params: Promise<{ locale: string }>;
 };
-const RootLayout: React.FC<React.PropsWithChildren<Props>> = async ({ children, params }) => {
+const RootLayout: FunctionComponent<PropsWithChildren<Props>> = async ({ params, children }) => {
   const { locale } = await params;
   setRequestLocale(locale);
   const messages = await getMessages();

@@ -1,11 +1,11 @@
 import clsx from "clsx";
-import React from "react";
+import { type FunctionComponent, type ReactNode } from "react";
 type IButton = {
   lblCtrl: string;
-  iconCtrl: React.ReactNode;
+  iconCtrl: ReactNode;
   onClickForm?: () => void;
 };
-const AppButton: React.FC<IButton> = ({ lblCtrl, iconCtrl, onClickForm }) => {
+const AppButton: FunctionComponent<IButton> = ({ lblCtrl, iconCtrl, onClickForm }) => {
   const handleClickForm = () => {
     if (onClickForm) {
       onClickForm();

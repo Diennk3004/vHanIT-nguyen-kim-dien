@@ -23,6 +23,11 @@ export class ProductService {
     };
   };
 
+  findProductApproved = async () => {
+    let productList = await prisma.product.findMany({ orderBy: { id: "desc" } });
+    return productList;
+  };
+
   findOne(id: string) {
     return prisma.product.findUnique({ where: { id: id ? parseInt(id) : 0 } });
   }

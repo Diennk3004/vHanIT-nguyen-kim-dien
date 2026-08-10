@@ -1,19 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from "@nestjs/common";
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe } from "@nestjs/common";
 import { OrdersService } from "./orders.service";
-import { CreateOrdersDto, UpdateOrdersDto } from "./dto";
+import { CreateOrdersDto, OrdersQuery, UpdateOrdersDto } from "./dto";
+import { Public, ResponseMessage } from "@/src/decorator";
 
 @Controller("orders")
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
-  @Post()
+  @Public()
+  @Post("create")
   create(@Body() createOrdersDto: CreateOrdersDto) {
     return this.ordersService.create(createOrdersDto);
   }
 
-  @Get()
-  findAll() {
-    return this.ordersService.findAll();
+  @Get("list")
+  getList(@Query() query: OrdersQuery) {
+    return this.ordersService.findAll(query);
   }
 
   @Get(":id")
@@ -29,5 +31,15 @@ export class OrdersController {
   @Delete(":id")
   remove(@Param("id") id: string) {
     return this.ordersService.remove(+id);
+  }
+
+  @Post("truncate")
+  truncate() {
+    return this.ordersService.truncate();
+  }
+  @Get("detail/:id")
+  @ResponseMessage("Get orders detail")
+  getDetail(@Param("id", ParseIntPipe) id: number) {
+    return this.ordersService.getDetail(id);
   }
 }

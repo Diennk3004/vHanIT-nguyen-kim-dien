@@ -1,13 +1,13 @@
-import { AppButton } from "@/components";
 import { AxiosService, formatCurrency, getUriBackend } from "@/utils";
-import { PlusOutlined } from "@ant-design/icons";
-import { Card, Table, type GetProp, type TableProps } from "antd";
+import { BorderInnerOutlined } from "@ant-design/icons";
+import { Button, Card, Table, type GetProp, type TableProps, Typography } from "antd";
 import clsx from "clsx";
 import { produce } from "immer";
-import React from "react";
+import React, { lazy } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+const { Title } = Typography;
 type TablePaginationConfig = Exclude<GetProp<TableProps, "pagination">, boolean>;
 interface DataType {
   key: string;
@@ -80,7 +80,7 @@ const ProductList = () => {
   const [tableParams, setTableParams] = React.useState<TableParams>({
     pagination: {
       current: 1,
-      pageSize: 100
+      pageSize: 6
     }
   });
   const [productList, setProductList] = React.useState<DataType[]>([]);
@@ -159,8 +159,10 @@ const ProductList = () => {
     <Card
       title={
         <div className={clsx(["flex", "justify-between"])}>
-          <span className={clsx(["text-3xl"])}>{t("Product")}</span>
-          <AppButton lblCtrl={t("New")} iconCtrl={<PlusOutlined />} onClickForm={handleNewForm} />
+          <Title level={2}>{t("Product")}</Title>
+          <Button type="primary" icon={<BorderInnerOutlined />} size="large" onClick={handleNewForm}>
+            {t("Add new")}
+          </Button>
         </div>
       }
     >

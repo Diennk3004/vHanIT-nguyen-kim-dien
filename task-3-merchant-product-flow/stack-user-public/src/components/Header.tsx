@@ -8,9 +8,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import Image from "next/image";
 import React from "react";
+import { redirect } from "next/navigation";
 const Header = () => {
   const [isOpenModal, setOpenModal] = React.useState<boolean>(false);
   const [isOpenLogin, setOpenLogin] = React.useState<boolean>(false);
+  const [isOpenRegister, setOpenRegister] = React.useState<boolean>(false);
   const modalRef = React.useRef<HTMLDivElement | null>(null);
   const menuModalRef = React.useRef<HTMLDivElement | null>(null);
   const logoHeaderRef = React.useRef<HTMLDivElement | null>(null);
@@ -119,6 +121,16 @@ const Header = () => {
       }
     }
   };
+  const handleRegister = (val: boolean) => () => {
+    setOpenRegister(val);
+    if (modalRef && modalRef.current && maskRef && maskRef.current) {
+      modalRef.current.classList.remove(stylesHeader.active);
+      maskRef.current.classList.remove(stylesHeader.active);
+    }
+  };
+  const handleCheckinCart = () => {
+    redirect("/cart");
+  };
   return (
     <React.Fragment>
       <header ref={headerRef}>
@@ -135,11 +147,11 @@ const Header = () => {
                 Đăng nhập
               </button>
               <span className={clsx(["text-gray-200"])}>|</span>
-              <button type="button" className={clsx(["cursor-pointer"])}>
+              <button type="button" className={clsx(["cursor-pointer"])} onClick={handleRegister(true)}>
                 Đăng ký
               </button>
-              <button type="button" className={clsx(["bg-red-600", "text-white", "font-bold", "pl-4", "pr-4", "pt-2", "pb-2", "rounded-lg", "cursor-pointer"])}>
-                Đăng tin
+              <button type="button" className={clsx(["bg-red-600", "text-white", "font-bold", "pl-4", "pr-4", "pt-2", "pb-2", "rounded-lg", "cursor-pointer"])} onClick={handleCheckinCart}>
+                Giỏ hàng
               </button>
             </div>
             <div className={clsx(["hidden", "max-xl:flex", "absolute", "top-0", "left-0", "h-full", "px-3", "items-center"])}>

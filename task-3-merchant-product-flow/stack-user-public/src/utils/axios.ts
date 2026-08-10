@@ -7,10 +7,11 @@ import { getExpired } from "./expired-time";
 import { hideLoading, showLoading } from "@/slices";
 import { useAppDispatch } from "@/hooks";
 import { getCookie } from "./cookie";
+import { getUriBackend } from "./uri-backend";
 const AxiosService = () => {
   /* const dispatch = useAppDispatch(); */
   const itemAxios: any = {
-    baseURL: process.env.NEXT_PUBLIC_API_URL as string,
+    baseURL: getUriBackend() as string,
     timeout: 10000
   };
   const axiosServices = axios.create(itemAxios);
