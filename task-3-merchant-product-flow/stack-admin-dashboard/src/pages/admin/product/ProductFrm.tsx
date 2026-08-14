@@ -51,9 +51,7 @@ const ProductForm = () => {
     }
     const { sku, productName, price } = values;
     let actionUrl: string = "";
-    let frmData = new FormData();
     if (productId) {
-      frmData.append("id", productId);
       actionUrl = "/product/update/" + productId;
     } else {
       actionUrl = "/product/create";

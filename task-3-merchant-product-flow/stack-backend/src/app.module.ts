@@ -7,6 +7,7 @@ import { UserModule } from "./users/users.module";
 import { ProductModule } from "./product/product.module";
 import { MediaFileModule } from "./media-file/media-file.module";
 import { OrdersModule } from "./orders/orders.module";
+import { CustomerModule } from './customer/customer.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -19,7 +20,8 @@ import { OrdersModule } from "./orders/orders.module";
     UserModule,
     ProductModule,
     MediaFileModule,
-    OrdersModule
+    OrdersModule,
+    CustomerModule
   ]
 })
 export class AppModule {}

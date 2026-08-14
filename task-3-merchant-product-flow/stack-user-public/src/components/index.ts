@@ -8,3 +8,5 @@ export * from "./Projects";
 export * from "./News";
 export * from "./Faq";
 export * from "./Ads";
+export * from "./Register";
+export * from "./Login";

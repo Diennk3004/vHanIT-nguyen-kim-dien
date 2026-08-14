@@ -1,7 +1,7 @@
 import styles from "@/assets/scss/homepage.module.scss";
 import { useAppDispatch } from "@/hooks";
 import { loginAction } from "@/slices";
-import { AxiosService, getExpired } from "@/utils";
+import { AxiosService } from "@/utils";
 import { clsx } from "clsx";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -35,6 +35,7 @@ const LoginPage = () => {
       password: ""
     }
   });
+
   const onSubmit: SubmitHandler<IFormInput> = (dataFrm) => {
     const { username, password } = dataFrm;
     AxiosService()

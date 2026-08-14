@@ -1,14 +1,16 @@
 "use client";
-import { Logo } from "@/components";
+import { Login, Logo, Register } from "@/components";
 import stylesHeader from "@/scss/header.module.scss";
 import { Link } from "@/utils";
-import { faBars, faClose, faHouse, faUser, faKey, faEye } from "@fortawesome/free-solid-svg-icons";
+import { faBars, faClose, faHouse, faUser, faKey, faEye, faMobile, faMailBulk } from "@fortawesome/free-solid-svg-icons";
 import { faGoogle } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import clsx from "clsx";
 import Image from "next/image";
 import React from "react";
 import { redirect } from "next/navigation";
+
 const Header = () => {
   const [isOpenModal, setOpenModal] = React.useState<boolean>(false);
   const [isOpenLogin, setOpenLogin] = React.useState<boolean>(false);
@@ -20,6 +22,7 @@ const Header = () => {
   const headerRef = React.useRef<HTMLElement | null>(null);
   const maskRef = React.useRef<HTMLDivElement | null>(null);
   const loginFrmRef = React.useRef<HTMLDivElement | null>(null);
+  const registerFrmRef = React.useRef<HTMLDivElement | null>(null);
   const menuSidebarRef = React.useRef<HTMLUListElement | null>(null);
   const arrowBuyRef = React.useRef<HTMLSpanElement | null>(null);
   const arrowRentRef = React.useRef<HTMLSpanElement | null>(null);
@@ -108,7 +111,7 @@ const Header = () => {
   }, []);
   const handleLoginOpen = (val: boolean) => () => {
     setOpenLogin(val);
-    if (modalRef && modalRef.current && maskRef && maskRef.current && loginFrmRef && loginFrmRef.current && menuModalRef && menuModalRef.current) {
+    if (modalRef && modalRef.current && maskRef && maskRef.current && loginFrmRef && loginFrmRef.current && menuModalRef && menuModalRef.current && registerFrmRef && registerFrmRef.current) {
       if (isOpenLogin === true) {
         modalRef.current.classList.remove(stylesHeader.active);
         maskRef.current.classList.remove(stylesHeader.active);
@@ -117,15 +120,29 @@ const Header = () => {
         modalRef.current.classList.add(stylesHeader.active);
         maskRef.current.classList.add(stylesHeader.active);
         loginFrmRef.current.classList.add(stylesHeader.active);
+        loginFrmRef.current.style.zIndex = "0";
         menuModalRef.current.classList.remove(stylesHeader.active);
+        registerFrmRef.current.classList.remove(stylesHeader.active);
+        registerFrmRef.current.style.zIndex = "-999";
       }
     }
   };
-  const handleRegister = (val: boolean) => () => {
+  const handleRegisterOpen = (val: boolean) => () => {
     setOpenRegister(val);
-    if (modalRef && modalRef.current && maskRef && maskRef.current) {
-      modalRef.current.classList.remove(stylesHeader.active);
-      maskRef.current.classList.remove(stylesHeader.active);
+    if (modalRef && modalRef.current && maskRef && maskRef.current && loginFrmRef && loginFrmRef.current && menuModalRef && menuModalRef.current && registerFrmRef && registerFrmRef.current) {
+      if (isOpenRegister === true) {
+        modalRef.current.classList.remove(stylesHeader.active);
+        maskRef.current.classList.remove(stylesHeader.active);
+        registerFrmRef.current.classList.remove(stylesHeader.active);
+      } else {
+        modalRef.current.classList.add(stylesHeader.active);
+        maskRef.current.classList.add(stylesHeader.active);
+        registerFrmRef.current.classList.add(stylesHeader.active);
+        registerFrmRef.current.style.zIndex = "0";
+        menuModalRef.current.classList.remove(stylesHeader.active);
+        loginFrmRef.current.classList.remove(stylesHeader.active);
+        loginFrmRef.current.style.zIndex = "-999";
+      }
     }
   };
   const handleCheckinCart = () => {
@@ -147,7 +164,7 @@ const Header = () => {
                 Đăng nhập
               </button>
               <span className={clsx(["text-gray-200"])}>|</span>
-              <button type="button" className={clsx(["cursor-pointer"])} onClick={handleRegister(true)}>
+              <button type="button" className={clsx(["cursor-pointer"])} onClick={handleRegisterOpen(true)}>
                 Đăng ký
               </button>
               <button type="button" className={clsx(["bg-red-600", "text-white", "font-bold", "pl-4", "pr-4", "pt-2", "pb-2", "rounded-lg", "cursor-pointer"])} onClick={handleCheckinCart}>
@@ -204,83 +221,15 @@ const Header = () => {
             <button type="button" className={clsx(["cursor-pointer", "absolute", "-top-8", "border-4", "text-white", "border-gray-300", "rounded-full", "w-10", "h-10", "flex", "justify-center", "items-center", "-right-7", "text-xl"])} onClick={handleLoginOpen(false)}>
               <FontAwesomeIcon icon={faClose} />
             </button>
-            <div className={clsx(["w-full", "h-full", "flex"])}>
-              <div className={clsx(["h-full", "w-85", "rounded-tl-md", "rounded-bl-md", "bg-[#FFECEB]", "px-4", "py-4"])}>
-                <div className={clsx(["text-2xl", "font-bold"])}>
-                  <Logo />
-                </div>
-                <Image src="/cover.800e56db.png" alt="Web" width={600} height={400} className={clsx(["w-full", "mt-40"])} />
-              </div>
-              <div className={clsx(["h-full", "grow", "rounded-tr-md", "rounded-br-md", "bg-white", "px-8", "py-8"])}>
-                <h3 className={clsx(["text-lg"])}>Xin chào bạn</h3>
-                <h4 className={clsx(["text-2xl", "mt-3"])}>Đăng nhập để tiếp tục</h4>
-                <div className={clsx(["mt-6"])}>
-                  <div className={clsx(["relative"])}>
-                    <div className={clsx(["absolute", "top-0", "left-2", "h-full", "flex", "justify-center", "items-center", "text-gray-400"])}>
-                      <FontAwesomeIcon icon={faUser} />
-                    </div>
-                    <input type="text" placeholder="Số điện thoại hoặc email" className={clsx(["w-full", "border", "border-gray-300", "rounded-md", "px-8", "py-3"])} />
-                  </div>
-                  <div className={clsx(["relative", "mt-4"])}>
-                    <div className={clsx(["absolute", "top-0", "left-2", "h-full", "flex", "justify-center", "items-center", "text-gray-400"])}>
-                      <FontAwesomeIcon icon={faKey} />
-                    </div>
-                    <input type="password" placeholder="Mật khẩu" className={clsx(["w-full", "border", "border-gray-300", "rounded-md", "px-8", "py-3"])} />
-                    <div className={clsx(["absolute", "top-0", "right-2", "h-full", "flex", "justify-center", "items-center", "text-gray-400"])}>
-                      <FontAwesomeIcon icon={faEye} />
-                    </div>
-                  </div>
-                  <button className={clsx(["cursor-pointer", "bg-orange-600", "text-white", "mt-4", "w-full", "py-3", "rounded-md"])}>Đăng nhập</button>
-                  <div className={clsx(["flex", "justify-between", "mt-4"])}>
-                    <div className={clsx(["flex", "gap-x-2", "items-center"])}>
-                      <input type="checkbox" />
-                      <div>Nhớ tài khoản</div>
-                    </div>
-                    <div className={clsx(["text-orange-600"])}>
-                      <Link href={{ pathname: "/" }}>Quên mật khẩu?</Link>
-                    </div>
-                  </div>
-                  <div className={clsx(["flex", "gap-x-2", "items-center", "justify-center", "mt-6"])}>
-                    <hr className={clsx(["border-t", "border-gray-200", "w-[30%]"])} />
-                    <div>Hoặc</div>
-                    <hr className={clsx(["border-t", "border-gray-200", "w-[30%]"])} />
-                  </div>
-                  <button type="button" className={clsx(["relative", "border", "border-gray-300", "rounded-md", "w-full", "py-2", "mt-6"])}>
-                    <div className={clsx(["absolute", "top-0", "left-2", "h-full", "flex", "items-center", "justify-center"])}>
-                      <FontAwesomeIcon icon={faGoogle} />
-                    </div>
-                    <span>Đăng nhập với Google</span>
-                  </button>
-                  <div className={clsx(["text-center", "mt-4", "text-gray-500", "text-xs", "mt-6"])}>
-                    Bằng việc tiếp tục, bạn đồng ý với{" "}
-                    <Link className={clsx(["text-orange-600"])} href={{ pathname: "/" }}>
-                      Điều khoản sử dụng
-                    </Link>
-                    ,
-                    <Link className={clsx(["text-orange-600"])} href={{ pathname: "/" }}>
-                      Chính sách bảo mật
-                    </Link>
-                  </div>
-                  <div className={clsx(["text-center", "text-gray-500", "text-xs"])}>
-                    <Link className={clsx(["text-orange-600"])} href={{ pathname: "/" }}>
-                      Quy chế
-                    </Link>
-                    ,
-                    <Link className={clsx(["text-orange-600"])} href={{ pathname: "/" }}>
-                      Chính sách của chúng tôi
-                    </Link>
-                    .
-                  </div>
-                  <div className={clsx(["mt-20", "text-center"])}>
-                    Chưa là thành viên,&nbsp;
-                    <Link href={{ pathname: "/" }} className={clsx(["text-orange-600"])}>
-                      Đăng ký
-                    </Link>
-                    &nbsp; tại đây
-                  </div>
-                </div>
-              </div>
-            </div>
+            <Login />
+          </div>
+        </div>
+        <div className={clsx(["absolute", "top-0", "left-0", "w-screen", "h-screen", "flex", "justify-center", "items-center", stylesHeader.registerFrm])} ref={registerFrmRef}>
+          <div className={clsx(["w-3xl", "h-170", "bg-white", "rounded-md", "relative"])}>
+            <button type="button" className={clsx(["cursor-pointer", "absolute", "-top-8", "border-4", "text-white", "border-gray-300", "rounded-full", "w-10", "h-10", "flex", "justify-center", "items-center", "-right-7", "text-xl"])} onClick={handleRegisterOpen(false)}>
+              <FontAwesomeIcon icon={faClose} />
+            </button>
+            <Register />
           </div>
         </div>
         <div className={clsx(["absolute", "top-0", "left-0", "w-80", "h-screen", "bg-white", "px-6", "py-3", stylesHeader.menuModal])} ref={menuModalRef}>

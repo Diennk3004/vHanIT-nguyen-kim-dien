@@ -160,7 +160,8 @@
       transform: translateX(0);
     }
   }
-  .loginFrm {
+  .loginFrm,
+  .registerFrm {
     opacity: 0;
     transition: opacity 0.5s;
     &.active {
