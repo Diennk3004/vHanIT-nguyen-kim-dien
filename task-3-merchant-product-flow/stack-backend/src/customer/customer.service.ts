@@ -1,12 +1,16 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { CreateCustomerDto, LoginCustomerDto } from "./dto";
 import { getHashPassword, prisma } from "@/src/utils";
 import { compareSync } from "bcryptjs";
 import { ICustomer } from "@/src/types";
+import { JwtService } from "@nestjs/jwt";
 @Injectable()
 export class CustomerService {
-  constructor(private confService: ConfigService) {}
+  constructor(
+    private confService: ConfigService,
+    private jwtService: JwtService
+  ) {}
   create = (createCustomerDto: CreateCustomerDto) => {
     return prisma.customer.create({
       data: {
@@ -23,13 +27,34 @@ export class CustomerService {
         OR: [{ mobile: loginCustomerDto.username }, { email: loginCustomerDto.username }]
       }
     });
-    if (customerItem) {
-      const isValid = compareSync(loginCustomerDto.password, customerItem.password);
-      if (isValid) {
-        return true;
-      } else {
-        return false;
-      }
+    if (!customerItem) {
+      throw new UnauthorizedException("Customer not found");
     }
+    if (!compareSync(loginCustomerDto.password, customerItem.password)) {
+      throw new UnauthorizedException("Invalid username password");
+    }
+    const token: string = await this.jwtService.signAsync(
+      {
+        sub: customerItem.id,
+        mobile: customerItem.mobile,
+        email: customerItem.mobile
+      },
+      { secret: this.confService.get<string>("JWT_ACCESS_TOKEN_SECRET") }
+    );
+    await prisma.customer.update({
+      where: {
+        id: customerItem.id
+      },
+      data: {
+        token
+      }
+    });
+    return {
+      id: customerItem.id,
+      fullname: customerItem.fullname,
+      mobile: customerItem.mobile,
+      email: customerItem.email,
+      token
+    };
   };
 }

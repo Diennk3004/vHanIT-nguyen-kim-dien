@@ -70,5 +70,6 @@ model Customer{
   mobile    String  @unique
   email     String  @unique
   password  String
+  token     String? @db.Text
   @@map("customer")
 }
