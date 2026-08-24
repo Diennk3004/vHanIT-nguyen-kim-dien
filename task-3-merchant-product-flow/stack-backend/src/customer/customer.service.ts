@@ -5,6 +5,7 @@ import { getHashPassword, prisma } from "@/src/utils";
 import { compareSync } from "bcryptjs";
 import { ICustomer } from "@/src/types";
 import { JwtService } from "@nestjs/jwt";
+import * as bcrypt from "bcrypt";
 @Injectable()
 export class CustomerService {
   constructor(
@@ -41,12 +42,14 @@ export class CustomerService {
       },
       { secret: this.confService.get<string>("JWT_ACCESS_TOKEN_SECRET") }
     );
+    const salt = await bcrypt.genSalt();
+    const hashedRefreshToken = await bcrypt.hash(token, salt);
     await prisma.customer.update({
       where: {
         id: customerItem.id
       },
       data: {
-        token
+        token: hashedRefreshToken
       }
     });
     return {
