@@ -1,31 +1,40 @@
 import { IS_PUBLIC_KEY } from "@/src/decorator";
 import { prisma } from "@/src/utils";
 import { ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { Reflector } from "@nestjs/core";
+import { JwtService } from "@nestjs/jwt";
 import { AuthGuard } from "@nestjs/passport";
+import * as bcrypt from "bcrypt";
 @Injectable()
 export class JwtAuthGuard extends AuthGuard("jwt") {
-  constructor(private reflector: Reflector) {
+  constructor(
+    private reflector: Reflector,
+    private confService: ConfigService,
+    private jwt: JwtService
+  ) {
     super();
   }
   async canActivate(context: ExecutionContext): Promise<any> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [context.getHandler(), context.getClass()]);
     if (isPublic) {
       return true;
-    } else {
-      const request = context.switchToHttp().getRequest();
-      const [type, token] = request.headers.authorization?.split(" ") ?? [];
-      const accessToken: string = type === "Bearer" ? token : undefined;
-      if (!accessToken) {
-        throw new UnauthorizedException();
-      }
-      const userRow: any = await prisma.users.findFirstOrThrow({
-        where: { token: accessToken }
-      });
-      if (!userRow) {
-        throw new UnauthorizedException();
-      }
-      return super.canActivate(context);
     }
+    const request = context.switchToHttp().getRequest();
+    const [type, token] = request.headers.authorization?.split(" ") ?? [];
+    const accessToken: string = type === "Bearer" ? token : undefined;
+    const payload = await this.jwt.verifyAsync(accessToken, {
+      secret: this.confService.get<string>("JWT_ACCESS_TOKEN_SECRET")
+    });
+    const userId: number = parseInt(payload.sub);
+    const user: any = await prisma.users.findFirst({ where: { id: userId } });
+    if (!user || !user.token) {
+      throw new UnauthorizedException();
+    }
+    const matchToken: boolean = await bcrypt.compare(accessToken, user.token);
+    if (!matchToken) {
+      throw new UnauthorizedException();
+    }
+    return super.canActivate(context);
   }
 }

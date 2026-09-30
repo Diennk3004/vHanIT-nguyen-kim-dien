@@ -1,8 +1,9 @@
 import { IUser } from "@/src/types";
 import { prisma } from "@/src/utils";
-import { BadGatewayException, Injectable } from "@nestjs/common";
+import { BadGatewayException, ForbiddenException, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { JwtService } from "@nestjs/jwt";
+import { JwtService, JwtSignOptions } from "@nestjs/jwt";
+import * as bcrypt from "bcrypt";
 import { compareSync } from "bcryptjs";
 import { CreateAuthDto } from "./dto";
 @Injectable()
@@ -24,29 +25,17 @@ export class AuthService {
     return null;
   };
   login = async (user: IUser) => {
-    const { id, username, phone, email, fullname } = user;
-    const payload: any = {
-      sub: "token login",
-      iss: "from server",
-      id,
-      phone,
-      email,
-      fullname,
-      username
-    };
-    const token: string = await this.jwt.sign(payload, {
-      secret: this.confService.get<string>("JWT_ACCESS_TOKEN_SECRET")
-    });
-    await prisma.users.update({ where: { id }, data: { token } });
+    const userItem: any = { sub: user.id, username: user.username, email: user.email, phone: user.phone };
+    let accessToken: string = await this.jwt.signAsync(userItem, {
+      secret: this.confService.get<string>("JWT_ACCESS_TOKEN_SECRET"),
+      expiresIn: this.confService.get<string>("JWT_ACCESS_EXPIRATION")
+    } as JwtSignOptions);
+    const salt = await bcrypt.genSalt();
+    const hashedRefreshToken = await bcrypt.hash(accessToken, salt);
+    await prisma.users.update({ where: { id: user.id }, data: { token: hashedRefreshToken } });
     return {
-      user: {
-        id,
-        username,
-        fullname,
-        email,
-        phone
-      },
-      token
+      user,
+      accessToken
     };
   };
   logout = async (user: IUser) => {
@@ -63,24 +52,30 @@ export class AuthService {
       token: data.token
     };
   };
-  checkValidToken = async (createAuthDto: CreateAuthDto, user: IUser) => {
-    const userDecode: any = this.jwt.decode(createAuthDto.token ?? "", { complete: true });
-    const payload: IUser = userDecode.payload;
-    const signature: string = userDecode.signature;
-    let item: IUser | null = null;
-    if (payload.id === user.id && payload.username === user.username) {
-      const data: any = await prisma.users.findFirstOrThrow({ where: { id: user.id, username: user.username } });
-      if (data) {
-        const tokenV2: string = data.token;
-        const decodeV2: any = this.jwt.decode(tokenV2, { complete: true });
-        const signatureV2: string = decodeV2.signature;
-        if (signature === signatureV2) {
-          item = user;
-        } else {
-          throw new BadGatewayException();
-        }
-      }
+  checkValidToken = async (createAuthDto: CreateAuthDto) => {
+    const token: string = createAuthDto.token ? createAuthDto.token : "";
+    const payload: any = await this.jwt.verifyAsync(token, {
+      secret: this.confService.get<string>("JWT_ACCESS_TOKEN_SECRET")
+    });
+    const userId: number = parseInt(payload.sub);
+    const user: any = await prisma.users.findFirstOrThrow({ where: { id: userId } });
+    if (!user || !user.token) {
+      throw new ForbiddenException("Access denied");
     }
-    return { user: item };
+    const refreshTokenMatches = await bcrypt.compare(token, user.token);
+    if (!refreshTokenMatches) {
+      throw new ForbiddenException("Access denied");
+    }
+    let accessToken: string = await this.jwt.signAsync(user, {
+      secret: this.confService.get<string>("JWT_ACCESS_TOKEN_SECRET"),
+      expiresIn: this.confService.get<string>("JWT_ACCESS_EXPIRATION")
+    } as JwtSignOptions);
+    const salt = await bcrypt.genSalt();
+    const hashedRefreshToken = await bcrypt.hash(accessToken, salt);
+    await prisma.users.update({ where: { id: user.id }, data: { token: hashedRefreshToken } });
+    return {
+      token,
+      user
+    };
   };
 }

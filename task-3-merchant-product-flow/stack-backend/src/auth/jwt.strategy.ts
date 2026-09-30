@@ -5,11 +5,11 @@ import { ExtractJwt, Strategy } from "passport-jwt";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private cfService: ConfigService) {
+  constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: cfService.get<string>("JWT_ACCESS_TOKEN_SECRET")
+      secretOrKey: "LAMBOGHINI"
     });
   }
 

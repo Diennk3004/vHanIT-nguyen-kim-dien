@@ -2,7 +2,7 @@ import { JwtContext } from "@/context";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { loginAction, logoutAction } from "@/slices";
 import { AxiosService } from "@/utils";
-import React from "react";
+import React, { type FunctionComponent, type PropsWithChildren } from "react";
 import { useTranslation } from "react-i18next";
 import Swal from "sweetalert2";
 const Toast = Swal.mixin({
@@ -16,7 +16,7 @@ const Toast = Swal.mixin({
     toast.onmouseleave = Swal.resumeTimer;
   }
 });
-const JwtProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
+const JwtProvider: FunctionComponent<PropsWithChildren> = ({ children }) => {
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
   const { user, isLoggedIn } = useAppSelector((state) => state.account);
