@@ -14,8 +14,7 @@ export class AuthService {
   ) {}
 
   validateUser = async (username: string, password: string) => {
-    let user: any = null;
-    user = await prisma.users.findUnique({ where: { username } });
+    let user: any = await prisma.users.findUnique({ where: { username } });
     if (user) {
       const isValid = compareSync(password, user.password);
       if (isValid === true) {
@@ -24,18 +23,55 @@ export class AuthService {
     }
     return null;
   };
+  generateTokens = async (user: IUser) => {
+    const accessExpiresIn = this.confService.get<string>("JWT_ACCESS_EXPIRATION") as string;
+    const refreshExpiresIn = this.confService.get<string>("JWT_REFRESH_EXPIRATION") as string;
+    const { id, username, email, phone } = user;
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwt.signAsync(
+        {
+          sub: id,
+          username,
+          email,
+          phone
+        },
+        {
+          secret: this.confService.get<string>("JWT_ACCESS_TOKEN_SECRET"),
+          expiresIn: accessExpiresIn
+        } as JwtSignOptions
+      ),
+      this.jwt.signAsync(
+        {
+          sub: id,
+          username,
+          email,
+          phone
+        },
+        {
+          secret: this.confService.get<string>("JWT_REFRESH_TOKEN_SECRET"),
+          expiresIn: refreshExpiresIn
+        } as JwtSignOptions
+      )
+    ]);
+
+    return {
+      accessToken,
+      refreshToken
+    };
+  };
   login = async (user: IUser) => {
     const userItem: any = { sub: user.id, username: user.username, email: user.email, phone: user.phone };
-    let accessToken: string = await this.jwt.signAsync(userItem, {
-      secret: this.confService.get<string>("JWT_ACCESS_TOKEN_SECRET"),
-      expiresIn: this.confService.get<string>("JWT_ACCESS_EXPIRATION")
-    } as JwtSignOptions);
+    const { accessToken, refreshToken } = await this.generateTokens(userItem);
     const salt = await bcrypt.genSalt();
     const hashedRefreshToken = await bcrypt.hash(accessToken, salt);
     await prisma.users.update({ where: { id: user.id }, data: { token: hashedRefreshToken } });
     return {
-      user,
-      accessToken
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      phone: user.phone,
+      accessToken,
+      refreshToken
     };
   };
   logout = async (user: IUser) => {
