@@ -20,7 +20,7 @@ async function bootstrap() {
   app.setBaseViewsDir(join(__dirname, "..", "views"));
   app.useGlobalPipes(new ValidationPipe());
   app.use(cookieParser());
-  app.enableCors();
+  app.enableCors({ credentials: false, origin: true, optionsSuccessStatus: 200 });
   const port: string | undefined = confService.get<string>("PORT");
   const app_env: string | undefined = confService.get<string>("APP_ENV");
   const config = new DocumentBuilder().setTitle("Slasify Multilevel messages test example").setDescription("The hierachy messages API description").setVersion("1.0").addTag("comments").build();

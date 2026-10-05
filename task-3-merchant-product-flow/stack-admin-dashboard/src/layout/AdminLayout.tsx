@@ -28,7 +28,8 @@ const AdminLayout = () => {
         .then((res) => {
           const { statusCode } = res.data;
           if (parseInt(statusCode) >= 200 && parseInt(statusCode) <= 299) {
-            document.cookie = `${import.meta.env.VITE_ACCESS_TOKEN_PREFIX}=token; expires=${getExpired(-100)}; path=/;`;
+            localStorage.removeItem(import.meta.env.VITE_ACCESS_TOKEN_PREFIX);
+            localStorage.removeItem(import.meta.env.VITE_REFRESH_TOKEN_PREFIX);
             dispatch(logoutAction());
           }
         });

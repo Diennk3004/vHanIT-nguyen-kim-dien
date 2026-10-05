@@ -1,6 +1,6 @@
 import { CurrentUser, Public, ResponseMessage } from "@/src/decorator";
 import { IUser } from "@/src/types";
-import { Body, Controller, Get, Post, Req, Res, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Post, Put, Req, Res, UseGuards } from "@nestjs/common";
 import { Request, Response } from "express";
 import { AuthService } from "./auth.service";
 import { CreateAuthDto } from "./dto";
@@ -20,7 +20,9 @@ export class AuthController {
   @Post("login")
   async login(@CurrentUser() user: IUser, @Res({ passthrough: true }) res: Response) {
     const result: any = await this.auth.login(user);
-    res.cookie("accessToken", result.accessToken, {
+    // Cách 1: Lấy token từ localStorage bên frontend trả về
+    // Cách 2: Lấy token lưu từ cookie bên backend
+    /* res.cookie("accessToken", result.accessToken, {
       httpOnly: true,
       secure: true,
       sameSite: "strict",
@@ -31,21 +33,13 @@ export class AuthController {
       secure: true,
       sameSite: "strict",
       maxAge: ms(this.confService.get<string>("JWT_REFRESH_EXPIRATION") as string)
-    });
+    }); */
     return result;
   }
 
-  @Post("refresh")
-  async refresh(@Req() req: Request) {
-    const token: string = req.cookies["token"];
-    console.log("token = ", token);
-    return true;
-  }
-
-  @ResponseMessage("Check valid token successfully")
-  @Post("check-valid-token")
-  checkValidToken(@Body() createAuthDto: CreateAuthDto) {
-    return this.auth.checkValidToken(createAuthDto);
+  @Put("refresh-token")
+  refresh(@CurrentUser() user: IUser, @Body() createAuthDto: CreateAuthDto) {
+    return this.auth.refreshToken(user, createAuthDto);
   }
 
   @Get("profile")

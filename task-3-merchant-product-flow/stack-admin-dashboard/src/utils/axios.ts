@@ -4,8 +4,6 @@
 
 import axios from "axios";
 import { getExpired } from "./expired-time";
-import { hideLoading, showLoading } from "@/slices";
-import { useAppDispatch } from "@/hooks";
 
 const AxiosService = () => {
   /* const dispatch = useAppDispatch(); */
@@ -15,6 +13,7 @@ const AxiosService = () => {
   };
   const axiosServices = axios.create(itemAxios);
   axiosServices.defaults.headers.common["Accept"] = "application/json";
+  axiosServices.defaults.withCredentials = false;
   let requestCount: number | 0 = 0;
   axiosServices.interceptors.request.use(
     (config: any) => {

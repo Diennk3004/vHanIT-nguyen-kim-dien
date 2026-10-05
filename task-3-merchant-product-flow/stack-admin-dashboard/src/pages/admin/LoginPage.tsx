@@ -43,19 +43,19 @@ const LoginPage = () => {
       .then((response: any) => {
         const { statusCode, message, data } = response.data;
         if (parseInt(statusCode) >= 200 && parseInt(statusCode) <= 299) {
-          const { user, token } = data;
-          if (user && token) {
-            localStorage.setItem(import.meta.env.VITE_ACCESS_TOKEN_PREFIX, token);
-            Toast.fire({
-              icon: "success",
-              title: t(message)
-            });
-            setTimeout(() => {
-              dispatch(loginAction(user));
-            }, 2000);
-          }
+          const { accessToken, refreshToken, user } = data;
+          localStorage.setItem(import.meta.env.VITE_ACCESS_TOKEN_PREFIX, accessToken);
+          localStorage.setItem(import.meta.env.VITE_REFRESH_TOKEN_PREFIX, refreshToken);
+          Toast.fire({
+            icon: "success",
+            title: t(message)
+          });
+          setTimeout(() => {
+            dispatch(loginAction(user));
+          }, 2000);
         } else {
           localStorage.removeItem(import.meta.env.VITE_ACCESS_TOKEN_PREFIX);
+          localStorage.removeItem(import.meta.env.VITE_REFRESH_TOKEN_PREFIX);
           Toast.fire({
             icon: "warning",
             title: t(message && Array.isArray(message) ? (message[0] as string) : message)

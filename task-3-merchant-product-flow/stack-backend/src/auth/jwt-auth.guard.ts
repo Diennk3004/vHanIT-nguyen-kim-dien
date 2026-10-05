@@ -24,10 +24,10 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
     const [type, token] = request.headers.authorization?.split(" ") ?? [];
     const accessToken: string = type === "Bearer" ? token : undefined;
     const payload = await this.jwt.verifyAsync(accessToken, {
-      secret: this.confService.get<string>("JWT_ACCESS_TOKEN_SECRET")
+      secret: this.confService.get<string>("JWT_SECRET")
     });
-    const userId: number = parseInt(payload.sub);
-    const user: any = await prisma.users.findFirst({ where: { id: userId } });
+    const id: number = parseInt(payload.sub);
+    const user: any = await prisma.users.findUniqueOrThrow({ where: { id } });
     if (!user || !user.token) {
       throw new UnauthorizedException();
     }
