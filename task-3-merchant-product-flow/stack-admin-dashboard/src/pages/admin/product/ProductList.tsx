@@ -90,7 +90,6 @@ const ProductList = () => {
       .then((response: any) => {
         let total = 0;
         const { statusCode, data } = response.data;
-        console.log("response = ", response);
         if (parseInt(statusCode) >= 200 && parseInt(statusCode) <= 299) {
           total = parseInt(data.total);
           let productList: DataType[] = data.productList;

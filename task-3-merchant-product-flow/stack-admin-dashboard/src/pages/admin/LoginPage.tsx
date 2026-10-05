@@ -62,10 +62,11 @@ const LoginPage = () => {
           });
         }
       })
-      .catch((err: any) => {
+      .catch((error: any) => {
+        console.log("Login - error.data.statusCode = ", error?.data?.statusCode);
         Toast.fire({
           icon: "error",
-          title: t(err?.data?.message)
+          title: t(error?.data?.message)
         });
       });
   };

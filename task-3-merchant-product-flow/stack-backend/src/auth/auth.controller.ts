@@ -1,12 +1,11 @@
 import { CurrentUser, Public, ResponseMessage } from "@/src/decorator";
 import { IUser } from "@/src/types";
-import { Body, Controller, Get, Post, Put, Req, Res, UseGuards } from "@nestjs/common";
-import { Request, Response } from "express";
+import { Body, Controller, Get, Post, Put, Res, UseGuards } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { Response } from "express";
 import { AuthService } from "./auth.service";
 import { CreateAuthDto } from "./dto";
-import { ConfigService } from "@nestjs/config";
 import { LocalAuthGuard } from "./local-auth.guard";
-import ms from "ms";
 @Controller("auth")
 export class AuthController {
   constructor(
@@ -37,14 +36,20 @@ export class AuthController {
     return result;
   }
 
+  @Put("check-valid-token")
+  checkValidToken(@CurrentUser() user: IUser, @Body() createAuthDto: CreateAuthDto) {
+    return this.auth.checkValidToken(user, createAuthDto);
+  }
+
+  @Public()
   @Put("refresh-token")
-  refresh(@CurrentUser() user: IUser, @Body() createAuthDto: CreateAuthDto) {
-    return this.auth.refreshToken(user, createAuthDto);
+  refresh(@Body() createAuthDto: CreateAuthDto) {
+    return this.auth.refreshToken(createAuthDto);
   }
 
   @Get("profile")
   getProfile(@CurrentUser() user: IUser) {
-    return user;
+    return this.auth.getProfile(user);
   }
 
   @Post("logout")
