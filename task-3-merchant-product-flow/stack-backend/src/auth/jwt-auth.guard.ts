@@ -3,7 +3,7 @@ import { prisma } from "@/src/utils";
 import { ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Reflector } from "@nestjs/core";
-import { JwtService, TokenExpiredError } from "@nestjs/jwt";
+import { JwtService } from "@nestjs/jwt";
 import { AuthGuard } from "@nestjs/passport";
 import * as bcrypt from "bcrypt";
 @Injectable()
