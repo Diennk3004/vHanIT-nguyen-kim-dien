@@ -4,8 +4,6 @@
 
 import axios from "axios";
 import { getExpired } from "./expired-time";
-import { hideLoading, showLoading } from "@/slices";
-import { useAppDispatch } from "@/hooks";
 
 const AxiosService = () => {
   /* const dispatch = useAppDispatch(); */
@@ -13,10 +11,11 @@ const AxiosService = () => {
     baseURL: import.meta.env.VITE_BACKEND_URI as string,
     timeout: 10000
   };
-  const axiosServices = axios.create(itemAxios);
-  axiosServices.defaults.headers.common["Accept"] = "application/json";
+  const authorizedAxiosInstance = axios.create(itemAxios);
+  authorizedAxiosInstance.defaults.headers.common["Accept"] = "application/json";
+  authorizedAxiosInstance.defaults.withCredentials = false;
   let requestCount: number | 0 = 0;
-  axiosServices.interceptors.request.use(
+  authorizedAxiosInstance.interceptors.request.use(
     (config: any) => {
       config.headers["Accept"] = "application/json";
       const accessToken: string | null = localStorage.getItem(import.meta.env.VITE_ACCESS_TOKEN_PREFIX as string);
@@ -29,17 +28,17 @@ const AxiosService = () => {
       }
       return config;
     },
-    (err: any) => {
-      if (err.config.headers.isShowLoading) {
+    (error: any) => {
+      if (error.config.headers.isShowLoading) {
         requestCount = requestCount - 1;
         /* if (requestCount === 0) {
           dispatch(hideLoading());
         } */
       }
-      return Promise.reject(err.response);
+      return Promise.reject(error.response);
     }
   );
-  axiosServices.interceptors.response.use(
+  authorizedAxiosInstance.interceptors.response.use(
     (res: any) => {
       if (res.config.headers.isShowLoading) {
         requestCount = requestCount - 1;
@@ -49,19 +48,29 @@ const AxiosService = () => {
       }
       return res;
     },
-    (err: any) => {
-      if (err.config.headers.isShowLoading) {
-        requestCount = requestCount - 1;
-        /* if (requestCount === 0) {
-          dispatch(hideLoading());
-        } */
+    (error: any) => {
+      if (error) {
+        if (error.config.headers.isShowLoading) {
+          requestCount = requestCount - 1;
+          /* if (requestCount === 0) {
+            dispatch(hideLoading());
+          } */
+        }
+        const originalRequest: any = error.config;
+        if (error.response && error.response.status) {
+          if (parseInt(error.response.status) === 410 && !originalRequest._retry) {
+            originalRequest._retry = true;
+            const refreshToken: string | null = localStorage.getItem(import.meta.env.VITE_REFRESH_TOKEN_PREFIX as string);
+            if (refreshToken) {
+            }
+          }
+          if (parseInt(error.response.status) !== 410) {
+          }
+        }
       }
-      if (err.response?.status === 401) {
-        document.cookie = `${import.meta.env.VITE_ACCESS_TOKEN_PREFIX as string}=token; expires=${getExpired(-100)}; path=/;`;
-      }
-      return Promise.reject(err.response);
+      return Promise.reject(error.response);
     }
   );
-  return axiosServices;
+  return authorizedAxiosInstance;
 };
 export { AxiosService };
