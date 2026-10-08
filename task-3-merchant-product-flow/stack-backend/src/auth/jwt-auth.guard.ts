@@ -5,7 +5,7 @@ import { ConfigService } from "@nestjs/config";
 import { Reflector } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
 import { AuthGuard } from "@nestjs/passport";
-import * as bcrypt from "bcrypt";
+import { compareSync } from "bcryptjs";
 @Injectable()
 export class JwtAuthGuard extends AuthGuard("jwt") {
   constructor(
@@ -31,7 +31,7 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
     if (!user || !user.token) {
       throw new UnauthorizedException();
     }
-    const matchToken: boolean = await bcrypt.compare(accessToken, user.token);
+    const matchToken: boolean = await compareSync(accessToken, user.token);
     if (!matchToken) {
       throw new UnauthorizedException();
     }
