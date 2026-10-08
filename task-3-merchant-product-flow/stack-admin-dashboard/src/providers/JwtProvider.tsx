@@ -2,7 +2,7 @@ import { JwtContext } from "@/context";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { loginAction, logoutAction } from "@/slices";
 import { AxiosService } from "@/utils";
-import React from "react";
+import { type FunctionComponent, type PropsWithChildren, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import Swal from "sweetalert2";
 const Toast = Swal.mixin({
@@ -16,16 +16,16 @@ const Toast = Swal.mixin({
     toast.onmouseleave = Swal.resumeTimer;
   }
 });
-const JwtProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
+const JwtProvider: FunctionComponent<PropsWithChildren> = ({ children }) => {
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
   const { user, isLoggedIn } = useAppSelector((state) => state.account);
-  React.useEffect(() => {
+  useEffect(() => {
     const init = () => {
-      const token: string | null = localStorage.getItem(import.meta.env.VITE_ACCESS_TOKEN_PREFIX as string);
+      let token: string | null = localStorage.getItem(import.meta.env.VITE_ACCESS_TOKEN_PREFIX as string);
       if (token) {
         AxiosService()
-          .post(
+          .put(
             "/auth/check-valid-token",
             { token },
             {
@@ -33,19 +33,33 @@ const JwtProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
             }
           )
           .then((response: any) => {
-            const { statusCode, data } = response.data;
-            if (parseInt(statusCode) >= 200 && parseInt(statusCode) <= 299) {
-              const { user } = data;
+            const { data } = response.data;
+            const { user } = data;
+            if (user) {
               dispatch(loginAction(user));
             } else {
               removeLocalStorageLogout();
             }
           })
-          .catch((err: any) => {
-            Toast.fire({
-              icon: "error",
-              title: t(err?.data?.message)
-            });
+          .catch(() => {
+            token = localStorage.getItem(import.meta.env.VITE_REFRESH_TOKEN_PREFIX as string);
+            if (token) {
+              AxiosService()
+                .put("/auth/refresh-token", { token }, { headers: { isShowLoading: false } })
+                .then((response: any) => {
+                  const { data } = response.data;
+                  const { user, accessToken } = data;
+                  localStorage.setItem(import.meta.env.VITE_ACCESS_TOKEN_PREFIX, accessToken);
+                  dispatch(loginAction(user));
+                })
+                .catch((error: any) => {
+                  removeLocalStorageLogout();
+                  Toast.fire({
+                    icon: "error",
+                    title: t(error?.data?.message)
+                  });
+                });
+            }
           });
       } else {
         removeLocalStorageLogout();
@@ -55,6 +69,7 @@ const JwtProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   }, []);
   const removeLocalStorageLogout = () => {
     localStorage.removeItem(import.meta.env.VITE_ACCESS_TOKEN_PREFIX);
+    localStorage.removeItem(import.meta.env.VITE_REFRESH_TOKEN_PREFIX);
     dispatch(logoutAction());
   };
   return <JwtContext.Provider value={{ isLoggedIn, user }}>{children}</JwtContext.Provider>;

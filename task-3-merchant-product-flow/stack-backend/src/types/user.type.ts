@@ -5,6 +5,5 @@ type IUser = {
   fullname: string;
   email: string;
   phone: string;
-  token: string;
 };
 export { IUser };

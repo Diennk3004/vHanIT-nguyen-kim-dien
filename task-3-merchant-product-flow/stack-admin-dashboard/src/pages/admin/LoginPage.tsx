@@ -1,7 +1,7 @@
 import styles from "@/assets/scss/homepage.module.scss";
 import { useAppDispatch } from "@/hooks";
 import { loginAction } from "@/slices";
-import { AxiosService, getExpired } from "@/utils";
+import { AxiosService } from "@/utils";
 import { clsx } from "clsx";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -35,6 +35,7 @@ const LoginPage = () => {
       password: ""
     }
   });
+
   const onSubmit: SubmitHandler<IFormInput> = (dataFrm) => {
     const { username, password } = dataFrm;
     AxiosService()
@@ -42,29 +43,30 @@ const LoginPage = () => {
       .then((response: any) => {
         const { statusCode, message, data } = response.data;
         if (parseInt(statusCode) >= 200 && parseInt(statusCode) <= 299) {
-          const { user, token } = data;
-          if (user && token) {
-            localStorage.setItem(import.meta.env.VITE_ACCESS_TOKEN_PREFIX, token);
-            Toast.fire({
-              icon: "success",
-              title: t(message)
-            });
-            setTimeout(() => {
-              dispatch(loginAction(user));
-            }, 2000);
-          }
+          const { accessToken, refreshToken, user } = data;
+          localStorage.setItem(import.meta.env.VITE_ACCESS_TOKEN_PREFIX, accessToken);
+          localStorage.setItem(import.meta.env.VITE_REFRESH_TOKEN_PREFIX, refreshToken);
+          Toast.fire({
+            icon: "success",
+            title: t(message)
+          });
+          setTimeout(() => {
+            dispatch(loginAction(user));
+          }, 2000);
         } else {
           localStorage.removeItem(import.meta.env.VITE_ACCESS_TOKEN_PREFIX);
+          localStorage.removeItem(import.meta.env.VITE_REFRESH_TOKEN_PREFIX);
           Toast.fire({
             icon: "warning",
             title: t(message && Array.isArray(message) ? (message[0] as string) : message)
           });
         }
       })
-      .catch((err: any) => {
+      .catch((error: any) => {
+        console.log("Login - error.data.statusCode = ", error?.data?.statusCode);
         Toast.fire({
           icon: "error",
-          title: t(err?.data?.message)
+          title: t(error?.data?.message)
         });
       });
   };

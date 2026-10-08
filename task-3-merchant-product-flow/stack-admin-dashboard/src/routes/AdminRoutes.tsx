@@ -2,9 +2,11 @@ import { Loadable } from "@/components";
 import { AuthGuard } from "@/guards";
 import { AdminLayout } from "@/layout";
 import { delayTimeout } from "@/utils";
-import React from "react";
-const ProductList = Loadable(React.lazy(() => delayTimeout(import("@/pages/admin/product/ProductList"))));
-const ProductFrm = Loadable(React.lazy(() => delayTimeout(import("@/pages/admin/product/ProductFrm"))));
+import { lazy } from "react";
+const ProductList = Loadable(lazy(() => delayTimeout(import("@/pages/admin/product/ProductList"))));
+const ProductFrm = Loadable(lazy(() => delayTimeout(import("@/pages/admin/product/ProductFrm"))));
+const OrdersList = Loadable(lazy(() => delayTimeout(import("@/pages/admin/orders/OrdersList"))));
+const OrdersFrm = Loadable(lazy(() => delayTimeout(import("@/pages/admin/orders/OrdersFrm"))));
 const AdminRoutes = {
   path: "admin",
   element: (
@@ -27,6 +29,19 @@ const AdminRoutes = {
         {
           path: "edit/:productId",
           element: <ProductFrm />
+        }
+      ]
+    },
+    {
+      path: "orders",
+      children: [
+        {
+          path: "list",
+          element: <OrdersList />
+        },
+        {
+          path: "form/:action/:orderId",
+          element: <OrdersFrm />
         }
       ]
     }

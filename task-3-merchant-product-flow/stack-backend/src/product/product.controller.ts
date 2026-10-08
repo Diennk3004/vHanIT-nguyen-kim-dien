@@ -1,3 +1,4 @@
+import { Public } from "@/src/decorator";
 import { Body, Controller, Delete, Get, Param, Post } from "@nestjs/common";
 import { CreateProductDto, UpdateProductDto } from "./dto";
 import { ProductService } from "./product.service";
@@ -13,6 +14,12 @@ export class ProductController {
   @Get("list")
   findAll() {
     return this.productService.findAll();
+  }
+
+  @Public()
+  @Get("get-approved")
+  findProductApproved() {
+    return this.productService.findProductApproved();
   }
 
   @Get("detail/:id")

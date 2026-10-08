@@ -1,8 +1,9 @@
 import { IUser } from "@/src/types";
 import { prisma } from "@/src/utils";
-import { BadGatewayException, Injectable } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { JwtService } from "@nestjs/jwt";
+import { JwtService, JwtSignOptions } from "@nestjs/jwt";
+import * as bcrypt from "bcrypt";
 import { compareSync } from "bcryptjs";
 import { CreateAuthDto } from "./dto";
 @Injectable()
@@ -11,10 +12,8 @@ export class AuthService {
     private confService: ConfigService,
     private jwt: JwtService
   ) {}
-
   validateUser = async (username: string, password: string) => {
-    let user: any = null;
-    user = await prisma.users.findUnique({ where: { username } });
+    let user: any = await prisma.users.findUnique({ where: { username } });
     if (user) {
       const isValid = compareSync(password, user.password);
       if (isValid === true) {
@@ -23,64 +22,72 @@ export class AuthService {
     }
     return null;
   };
-  login = async (user: IUser) => {
-    const { id, username, phone, email, fullname } = user;
-    const payload: any = {
-      sub: "token login",
-      iss: "from server",
-      id,
-      phone,
-      email,
-      fullname,
-      username
+  generateTokens = async (user: IUser) => {
+    const { id, username, fullname, email, phone } = user;
+    const userObj: any = { sub: id, username, fullname, email, phone };
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwt.signAsync(userObj, {
+        secret: this.confService.get<string>("JWT_SECRET"),
+        expiresIn: this.confService.get<string>("JWT_EXPIRATION") as string
+      } as JwtSignOptions),
+      this.jwt.signAsync(userObj, {
+        secret: this.confService.get<string>("JWT_REFRESH_SECRET"),
+        expiresIn: this.confService.get<string>("JWT_REFRESH_EXPIRATION") as string
+      } as JwtSignOptions)
+    ]);
+    return {
+      accessToken,
+      refreshToken
     };
-    const token: string = await this.jwt.sign(payload, {
-      secret: this.confService.get<string>("JWT_ACCESS_TOKEN_SECRET")
-    });
-    await prisma.users.update({ where: { id }, data: { token } });
+  };
+  login = async (user: IUser) => {
+    const { accessToken, refreshToken } = await this.generateTokens(user);
+    const salt = await bcrypt.genSalt();
+    const hashedRefreshToken = await bcrypt.hash(accessToken, salt);
+    await prisma.users.update({ where: { id: user.id }, data: { token: hashedRefreshToken } });
     return {
       user: {
-        id,
-        username,
-        fullname,
-        email,
-        phone
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        fullname: user.fullname,
+        phone: user.phone
       },
-      token
+      accessToken,
+      refreshToken
     };
+  };
+  refreshToken = async (createAuthDto: CreateAuthDto) => {
+    const refreshToken: string = createAuthDto.token ?? "";
+    const payload: any = await this.jwt.verifyAsync(refreshToken, {
+      secret: this.confService.get<string>("JWT_REFRESH_SECRET")
+    });
+    const { sub, username, fullname, email, phone } = payload;
+    const accessToken: string = await this.jwt.signAsync({ sub, username, fullname, email, phone }, {
+      secret: this.confService.get<string>("JWT_SECRET"),
+      expiresIn: this.confService.get<string>("JWT_EXPIRATION") as string
+    } as JwtSignOptions);
+    return { user: { id: sub, username, fullname, email, phone }, accessToken };
   };
   logout = async (user: IUser) => {
-    const { id } = user;
-    const data: any = await prisma.users.update({ where: { id }, data: { token: null } });
-    return {
-      user: {
-        id: data && data.id ? data.id : 0,
-        username: data && data.username ? data.username : "",
-        fullname: data && data.fullname ? data.fullname : "",
-        email: data && data.email ? data.email : "",
-        phone: data && data.phone ? data.phone : ""
-      },
-      token: data.token
-    };
+    await prisma.users.update({ where: { id: user.id }, data: { token: null } });
+    return null;
   };
-  checkValidToken = async (createAuthDto: CreateAuthDto, user: IUser) => {
-    const userDecode: any = this.jwt.decode(createAuthDto.token ?? "", { complete: true });
-    const payload: IUser = userDecode.payload;
-    const signature: string = userDecode.signature;
-    let item: IUser | null = null;
-    if (payload.id === user.id && payload.username === user.username) {
-      const data: any = await prisma.users.findFirstOrThrow({ where: { id: user.id, username: user.username } });
-      if (data) {
-        const tokenV2: string = data.token;
-        const decodeV2: any = this.jwt.decode(tokenV2, { complete: true });
-        const signatureV2: string = decodeV2.signature;
-        if (signature === signatureV2) {
-          item = user;
-        } else {
-          throw new BadGatewayException();
-        }
-      }
+  checkValidToken = async (user: IUser, createAuthDto: CreateAuthDto) => {
+    const accessToken: string = createAuthDto.token ?? "";
+    const payload: any = await this.jwt.verifyAsync(accessToken, {
+      secret: this.confService.get<string>("JWT_SECRET")
+    });
+    const { sub, username, email, phone } = payload;
+    if (parseInt(sub) === user.id && username === user.username && email === user.email && phone === user.phone) {
+      return {
+        user,
+        accessToken
+      };
     }
-    return { user: item };
+    return null;
+  };
+  getProfile = async (user: IUser) => {
+    return user;
   };
 }
